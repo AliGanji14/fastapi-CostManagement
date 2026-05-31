@@ -1,3 +1,5 @@
+from database import *
+from users.models import *
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
