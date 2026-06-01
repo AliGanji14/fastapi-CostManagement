@@ -1,94 +1,49 @@
-from fastapi import FastAPI, status, Query, HTTPException, Path, Depends
-from fastapi.responses import JSONResponse
-from fastapi import FastAPI, Response, Request
+
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
-from typing import List
-from sqlalchemy.orm import Session
+from expenses.routes import router as expenses_routes
 from users.routes import router as users_routes
 from fastapi.middleware.cors import CORSMiddleware
-from schemas import ExpenseCreateSchema, ExpenseResponseSchema, ExpenseUpdateSchema
-from database import Base, engine, get_db, Expense
-from auth.jwt_auth import get_authenticate_user
+from core.database import Base, engine
 import time
-from users.models import UserModel
 
 
-app = FastAPI()
-
+tags_metadata = [
+    {
+        "name": "expenses",
+        "description": "Operations related to expense tracking and management",
+        "externalDocs": {
+            "description": "More about expense management",
+            "url": "https://github.com/AliGanji14"
+        }
+    }
+]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print('Application startup')
-    Base.metadata.create_all(engine)
+    print("Application startup")
+    Base.metadata.create_all(bind=engine)
     yield
-    print('Application shutdown')
+    print("Application shutdown")
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(docs_url="/docs",
+              title="Expense Management Application",
+              description="This section handles expense tracking and management",
+              version="0.0.1",
+              contact={
+                      "name": "Ali Ganji",
+                      "url": "https://github.com/AliGanji14",
+                      "email": "aliganji1309@gmail.com",
+              },
+              license_info={
+                  "name": "MIT",
+              },
+              lifespan=lifespan,
+              openapi_tags=tags_metadata)
+
 
 app.include_router(users_routes)
-
-
-@app.get('/expenses', status_code=status.HTTP_200_OK, response_model=List[ExpenseResponseSchema])
-def get_expenses(q: str | None = Query(
-        description='Search expenses by description',
-        example='Internet',
-        alias='search',
-        max_length=50,
-        default=None),
-        db: Session = Depends(get_db),
-        user: UserModel = Depends(get_authenticate_user)):
-    query = db.query(Expense).filter_by(user_id=user.id)
-    if q:
-        query = query.filter_by(description=q)
-    results = query.all()
-    return results
-
-
-@app.post('/expenses', status_code=status.HTTP_201_CREATED, response_model=ExpenseResponseSchema)
-def create_expense(request: ExpenseCreateSchema, db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    data = request.model_dump()
-    data.update({'user_id': user.id})
-    expenses_obj = Expense(**data)
-    db.add(expenses_obj)
-    db.commit()
-    db.refresh(expenses_obj)
-    return expenses_obj
-
-
-@app.get('/expenses/{expense_id}', status_code=status.HTTP_200_OK, response_model=ExpenseResponseSchema)
-def get_expense(expense_id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    expense_obj = db.query(Expense).filter_by(
-        user_id=user.id, id=expense_id).first()
-    if not expense_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='cost not found')
-    return expense_obj
-
-
-@app.put('/expenses/{expense_id}', status_code=status.HTTP_200_OK, response_model=ExpenseResponseSchema)
-def update_expense(request: ExpenseUpdateSchema, expense_id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    expense_obj = db.query(Expense).filter_by(
-        user_id=user.id, id=expense_id).first()
-    if not expense_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='cost not found')
-    for field, value in request.model_dump(exclude_unset=True).items():
-        setattr(expense_obj, field, value)
-
-    db.commit()
-    db.refresh(expense_obj)
-    return expense_obj
-
-
-@app.delete('/expenses/{expense_id}', status_code=status.HTTP_200_OK)
-def delete_expense(expense_id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    expense_obj = db.query(Expense).filter_by(
-        user_id=user.id, id=expense_id).first()
-    if not expense_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='cost not found')
-    db.delete(expense_obj)
-    db.commit()
+app.include_router(expenses_routes)
 
 
 @app.middleware("http")

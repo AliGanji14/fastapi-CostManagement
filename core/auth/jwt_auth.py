@@ -1,12 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from users.models import UserModel
-from database import get_db
+from core.database import get_db
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import jwt
 from jwt.exceptions import DecodeError, InvalidSignatureError
-from config import settings
+from core.config import settings
 
 security = HTTPBearer()
 

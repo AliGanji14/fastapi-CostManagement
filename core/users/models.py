@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from database import Base
+from core.database import Base
 from sqlalchemy.sql import func
 from passlib.context import CryptContext
 from sqlalchemy.orm import relationship
