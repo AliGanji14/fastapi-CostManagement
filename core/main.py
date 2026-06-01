@@ -37,7 +37,7 @@ def get_expenses(q: str | None = Query(
         default=None),
         db: Session = Depends(get_db),
         user: UserModel = Depends(get_authenticate_user)):
-    query = db.query(Expense)
+    query = db.query(Expense).filter_by(user_id=user.id)
     if q:
         query = query.filter_by(description=q)
     results = query.all()
@@ -46,48 +46,49 @@ def get_expenses(q: str | None = Query(
 
 @app.post('/expenses', status_code=status.HTTP_201_CREATED, response_model=ExpenseResponseSchema)
 def create_expense(request: ExpenseCreateSchema, db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    new_expense = Expense(description=request.description,
-                          amount=request.amount)
-    db.add(new_expense)
+    data = request.model_dump()
+    data.update({'user_id': user.id})
+    expenses_obj = Expense(**data)
+    db.add(expenses_obj)
     db.commit()
-    db.refresh(new_expense)
-    return new_expense
+    db.refresh(expenses_obj)
+    return expenses_obj
 
 
-@app.get('/expenses/{id}', status_code=status.HTTP_200_OK, response_model=ExpenseResponseSchema)
-def get_expense(id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    expense = db.query(Expense).filter_by(id=id).one_or_none()
-    if expense:
-        return expense
-    else:
+@app.get('/expenses/{expense_id}', status_code=status.HTTP_200_OK, response_model=ExpenseResponseSchema)
+def get_expense(expense_id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
+    expense_obj = db.query(Expense).filter_by(
+        user_id=user.id, id=expense_id).first()
+    if not expense_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='cost not found')
+    return expense_obj
 
 
-@app.put('/expenses/{id}', status_code=status.HTTP_200_OK, response_model=ExpenseResponseSchema)
-def update_expense(request: ExpenseUpdateSchema, id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    expense = db.query(Expense).filter_by(id=id).one_or_none()
-    if expense:
-        expense.description = request.description
-        expense.amount = request.amount
-        db.commit()
-        db.refresh(expense)
-        return expense
-    else:
+@app.put('/expenses/{expense_id}', status_code=status.HTTP_200_OK, response_model=ExpenseResponseSchema)
+def update_expense(request: ExpenseUpdateSchema, expense_id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
+    expense_obj = db.query(Expense).filter_by(
+        user_id=user.id, id=expense_id).first()
+    if not expense_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='cost not found')
+    for field, value in request.model_dump(exclude_unset=True).items():
+        setattr(expense_obj, field, value)
+
+    db.commit()
+    db.refresh(expense_obj)
+    return expense_obj
 
 
-@app.delete('/expenses/{id}', status_code=status.HTTP_200_OK)
-def delete_expense(id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
-    expense = db.query(Expense).filter_by(id=id).one_or_none()
-    if expense:
-        db.delete(expense)
-        db.commit()
-        return JSONResponse(content={'detail': 'cost removed successfuly'},)
-    else:
+@app.delete('/expenses/{expense_id}', status_code=status.HTTP_200_OK)
+def delete_expense(expense_id: int = Path(description='The ID of the cost in expenses'), db: Session = Depends(get_db), user: UserModel = Depends(get_authenticate_user)):
+    expense_obj = db.query(Expense).filter_by(
+        user_id=user.id, id=expense_id).first()
+    if not expense_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='cost not found')
+    db.delete(expense_obj)
+    db.commit()
 
 
 @app.middleware("http")
