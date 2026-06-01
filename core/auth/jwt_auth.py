@@ -1,104 +1,79 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Request, status
 from users.models import UserModel
 from core.database import get_db
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-import jwt
-from jwt.exceptions import DecodeError, InvalidSignatureError
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
 from core.config import settings
 
-security = HTTPBearer()
+ACCESS_TOKEN_COOKIE_NAME = "access_token"
+REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
+ALGORITHM = "HS256"
 
 
-def get_authenticate_user(credentials: HTTPAuthorizationCredentials = Depends(security),
-                          db: Session = Depends(get_db)):
-
-    token = credentials.credentials
-    try:
-        decoded = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
-        user_id = decoded.get('user_id', None)
-        if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="authentication failed, user_id not found in the payload")
-        if decoded.get('type') != 'access':
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="authentication failed, token type not valid")
-        if datetime.now() > datetime.fromtimestamp(decoded.get('exp')):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="authentication failed, token expired")
-
-        user_obj = db.query(UserModel).filter_by(id=user_id).one()
-        return user_obj
-
-    except InvalidSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="authentication failed, invalid signature"
-        )
-    except DecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="authentication failed, decode failed"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"authentication failed, {e}")
-
-
-
-def generate_access_token(user_id: int, expires_in: int = 3600):
-    now = datetime.utcnow()
+def create_token(user_id: int, token_type: str, expires_in: int):
+    now = datetime.now(timezone.utc)
     payload = {
-        'type': 'access',
-        'user_id': user_id,
-        'iat': now,
-        'exp': now + timedelta(seconds=expires_in),
-
+        "type": token_type,
+        "user_id": user_id,
+        "iat": now,
+        "exp": now + timedelta(seconds=expires_in),
     }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm='HS256')
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=ALGORITHM)
 
 
-def generate_regresh_token(user_id: int, expires_in: int = 3600*24):
-    now = datetime.utcnow()
-    payload = {
-        'type': 'refresh',
-        'user_id': user_id,
-        'iat': now,
-        'exp': now + timedelta(seconds=expires_in),
-    }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm='HS256')
-
-
-def decode_refresh_token(token):
+def decode_token(token: str, token_type: str):
     try:
-        decoded = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
-        user_id = decoded.get('user_id', None)
+        decoded = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = decoded.get("user_id")
         if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="authentication failed, user_id not found in the payload")
-        if decoded.get('type') != 'refresh':
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="authentication failed, token type not valid")
-        if datetime.now() > datetime.fromtimestamp(decoded.get('exp')):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="authentication failed, token expired")
-
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="authentication failed, user_id not found in the payload",
+            )
+        if decoded.get("type") != token_type:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="authentication failed, token type not valid",
+            )
         return user_id
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="authentication failed, token is expired or invalid",
+        )
 
-    except InvalidSignatureError:
+
+def get_authenticate_user(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="authentication failed, invalid signature"
+            detail="authentication failed, access token cookie not found",
         )
-    except DecodeError:
+
+    user_id = decode_token(token, "access")
+    user_obj = db.query(UserModel).filter_by(id=user_id).one_or_none()
+    if not user_obj:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="authentication failed, decode failed"
+            detail="authentication failed, user not found",
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"authentication failed, {e}")
+    return user_obj
+
+
+def generate_access_token(user_id: int, expires_in: int = settings.ACCESS_TOKEN_EXPIRE_SECONDS):
+    return create_token(user_id, "access", expires_in)
+
+
+def generate_refresh_token(user_id: int, expires_in: int = settings.REFRESH_TOKEN_EXPIRE_SECONDS):
+    return create_token(user_id, "refresh", expires_in)
+
+
+def generate_regresh_token(user_id: int, expires_in: int = settings.REFRESH_TOKEN_EXPIRE_SECONDS):
+    return generate_refresh_token(user_id, expires_in)
+
+
+def decode_refresh_token(token: str):
+    return decode_token(token, "refresh")
 

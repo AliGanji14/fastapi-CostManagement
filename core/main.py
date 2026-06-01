@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from contextlib import asynccontextmanager
 from expenses.routes import router as expenses_routes
 from users.routes import router as users_routes
@@ -18,6 +18,7 @@ tags_metadata = [
         }
     }
 ]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,20 +45,3 @@ app = FastAPI(docs_url="/docs",
 
 app.include_router(users_routes)
 app.include_router(expenses_routes)
-
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
-)
