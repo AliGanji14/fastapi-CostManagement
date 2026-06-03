@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request, Response
 from contextlib import asynccontextmanager
 from expenses.routes import router as expenses_routes
 from users.routes import router as users_routes
+from i18n_routes import router as i18n_routes
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import Base, engine
 import time
@@ -45,3 +46,4 @@ app = FastAPI(docs_url="/docs",
 
 app.include_router(users_routes)
 app.include_router(expenses_routes)
+app.include_router(i18n_routes)

@@ -1,0 +1,56 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: cost-management 1.0\n"
+"Language: fa\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Welcome to the expense management API"
+msgstr "به API مدیریت هزینه خوش آمدید"
+
+msgid "The API is running successfully"
+msgstr "API با موفقیت در حال اجرا است"
+
+msgid "Send lang=en or lang=fa to choose response language"
+msgstr "برای انتخاب زبان پاسخ، lang=en یا lang=fa را ارسال کنید"
+
+msgid "user dosent exist"
+msgstr "کاربر وجود ندارد"
+
+msgid "password is invalid"
+msgstr "رمز عبور نامعتبر است"
+
+msgid "logged in successfully"
+msgstr "ورود با موفقیت انجام شد"
+
+msgid "username already exists"
+msgstr "نام کاربری قبلا ثبت شده است"
+
+msgid "user registered successfully"
+msgstr "ثبت نام کاربر با موفقیت انجام شد"
+
+msgid "refresh token cookie not found"
+msgstr "کوکی refresh token پیدا نشد"
+
+msgid "session renewed successfully"
+msgstr "نشست با موفقیت تمدید شد"
+
+msgid "logged out successfully"
+msgstr "خروج با موفقیت انجام شد"
+
+msgid "cost not found"
+msgstr "هزینه پیدا نشد"
+
+msgid "authentication failed, user_id not found in the payload"
+msgstr "احراز هویت ناموفق بود، شناسه کاربر در payload پیدا نشد"
+
+msgid "authentication failed, token type not valid"
+msgstr "احراز هویت ناموفق بود، نوع توکن معتبر نیست"
+
+msgid "authentication failed, token is expired or invalid"
+msgstr "احراز هویت ناموفق بود، توکن منقضی شده یا نامعتبر است"
+
+msgid "authentication failed, access token cookie not found"
+msgstr "احراز هویت ناموفق بود، کوکی access token پیدا نشد"
+
+msgid "authentication failed, user not found"
+msgstr "احراز هویت ناموفق بود، کاربر پیدا نشد"
