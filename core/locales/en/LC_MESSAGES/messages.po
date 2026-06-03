@@ -1,0 +1,56 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: cost-management 1.0\n"
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Welcome to the expense management API"
+msgstr "Welcome to the expense management API"
+
+msgid "The API is running successfully"
+msgstr "The API is running successfully"
+
+msgid "Send lang=en or lang=fa to choose response language"
+msgstr "Send lang=en or lang=fa to choose response language"
+
+msgid "user dosent exist"
+msgstr "user does not exist"
+
+msgid "password is invalid"
+msgstr "password is invalid"
+
+msgid "logged in successfully"
+msgstr "logged in successfully"
+
+msgid "username already exists"
+msgstr "username already exists"
+
+msgid "user registered successfully"
+msgstr "user registered successfully"
+
+msgid "refresh token cookie not found"
+msgstr "refresh token cookie not found"
+
+msgid "session renewed successfully"
+msgstr "session renewed successfully"
+
+msgid "logged out successfully"
+msgstr "logged out successfully"
+
+msgid "cost not found"
+msgstr "cost not found"
+
+msgid "authentication failed, user_id not found in the payload"
+msgstr "authentication failed, user_id not found in the payload"
+
+msgid "authentication failed, token type not valid"
+msgstr "authentication failed, token type not valid"
+
+msgid "authentication failed, token is expired or invalid"
+msgstr "authentication failed, token is expired or invalid"
+
+msgid "authentication failed, access token cookie not found"
+msgstr "authentication failed, access token cookie not found"
+
+msgid "authentication failed, user not found"
+msgstr "authentication failed, user not found"
