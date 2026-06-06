@@ -47,9 +47,9 @@ def decode_token(token: str, token_type: str, _: Callable[[str], str]):
 
 
 def get_authenticate_user(
-        request: Request,
-        db: Session = Depends(get_db),
-        _: Callable[[str], str] = Depends(get_translator),
+    request: Request,
+    db: Session = Depends(get_db),
+    _: Callable[[str], str] = Depends(get_translator),
 ):
     token = request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)
     if not token:
@@ -68,18 +68,23 @@ def get_authenticate_user(
     return user_obj
 
 
-def generate_access_token(user_id: int, expires_in: int = settings.ACCESS_TOKEN_EXPIRE_SECONDS):
+def generate_access_token(
+    user_id: int, expires_in: int = settings.ACCESS_TOKEN_EXPIRE_SECONDS
+):
     return create_token(user_id, "access", expires_in)
 
 
-def generate_refresh_token(user_id: int, expires_in: int = settings.REFRESH_TOKEN_EXPIRE_SECONDS):
+def generate_refresh_token(
+    user_id: int, expires_in: int = settings.REFRESH_TOKEN_EXPIRE_SECONDS
+):
     return create_token(user_id, "refresh", expires_in)
 
 
-def generate_regresh_token(user_id: int, expires_in: int = settings.REFRESH_TOKEN_EXPIRE_SECONDS):
+def generate_regresh_token(
+    user_id: int, expires_in: int = settings.REFRESH_TOKEN_EXPIRE_SECONDS
+):
     return generate_refresh_token(user_id, expires_in)
 
 
 def decode_refresh_token(token: str, _: Callable[[str], str]):
     return decode_token(token, "refresh", _)
-

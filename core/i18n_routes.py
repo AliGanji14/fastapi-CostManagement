@@ -4,14 +4,13 @@ from fastapi import APIRouter, Depends
 
 from core.i18n import get_language, get_translator
 
-
 router = APIRouter(tags=["messages"], prefix="/messages")
 
 
 @router.get("/welcome")
 def welcome_message(
-        language: str = Depends(get_language),
-        _: Callable[[str], str] = Depends(get_translator),
+    language: str = Depends(get_language),
+    _: Callable[[str], str] = Depends(get_translator),
 ):
     return {
         "language": language,

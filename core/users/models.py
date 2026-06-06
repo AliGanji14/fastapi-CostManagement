@@ -4,7 +4,6 @@ from sqlalchemy.sql import func
 from passlib.context import CryptContext
 from sqlalchemy.orm import relationship
 
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

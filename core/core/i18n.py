@@ -4,7 +4,6 @@ from typing import Callable
 
 from fastapi import Depends, Header, Query
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOCALE_DIR = BASE_DIR / "locales"
 DOMAIN = "messages"
@@ -33,8 +32,8 @@ def get_language_from_accept_language(accept_language: str | None):
 
 
 def get_language(
-        lang: str | None = Query(default=None),
-        accept_language: str | None = Header(default=None, alias="Accept-Language"),
+    lang: str | None = Query(default=None),
+    accept_language: str | None = Header(default=None, alias="Accept-Language"),
 ):
     if lang:
         return normalize_language(lang)
