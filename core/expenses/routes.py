@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from fastapi import APIRouter, status, Query, HTTPException, Path, Depends
+from fastapi import APIRouter, status, Query, Path, Depends
 from typing import List
 from sqlalchemy.orm import Session
 from expenses.schemas import (
@@ -12,6 +12,7 @@ from expenses.models import Expense
 from users.models import UserModel
 from auth.jwt_auth import get_authenticate_user
 from core.i18n import get_translator
+from core.exceptions import ExpenseNotFoundException
 
 router = APIRouter(tags=["expenses"])
 
@@ -24,7 +25,7 @@ router = APIRouter(tags=["expenses"])
 def get_expenses(
     q: str | None = Query(
         description="Search expenses by description",
-        example="Internet",
+        examples=["Internet"],
         alias="search",
         max_length=50,
         default=None,
@@ -71,9 +72,7 @@ def get_expense(
 ):
     expense_obj = db.query(Expense).filter_by(user_id=user.id, id=expense_id).first()
     if not expense_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=_("cost not found")
-        )
+        raise ExpenseNotFoundException(expense_id=expense_id)
     return expense_obj
 
 
@@ -91,9 +90,7 @@ def update_expense(
 ):
     expense_obj = db.query(Expense).filter_by(user_id=user.id, id=expense_id).first()
     if not expense_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=_("cost not found")
-        )
+        raise ExpenseNotFoundException(expense_id=expense_id)
     for field, value in request.model_dump(exclude_unset=True).items():
         setattr(expense_obj, field, value)
 
@@ -111,8 +108,6 @@ def delete_expense(
 ):
     expense_obj = db.query(Expense).filter_by(user_id=user.id, id=expense_id).first()
     if not expense_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=_("cost not found")
-        )
+        raise ExpenseNotFoundException(expense_id=expense_id)
     db.delete(expense_obj)
     db.commit()
