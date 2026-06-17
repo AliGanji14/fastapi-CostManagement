@@ -52,6 +52,12 @@ def test_user(test_db):
 
 
 @pytest.fixture(scope="function")
+def anon_client(test_db):
+    """Create an unauthenticated test client."""
+    return TestClient(app)
+
+
+@pytest.fixture(scope="function")
 def authenticated_client(client, test_user):
     """Create an authenticated test client."""
     access_token = generate_access_token(test_user.id)
