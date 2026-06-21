@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +12,7 @@ from users.models import UserModel
 from auth.jwt_auth import generate_access_token
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+
 
 @pytest.fixture(scope="function")
 def test_db():
