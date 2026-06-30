@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     REDIS_URL: str
-    SENTRY_DSN = str
+    SENTRY_DSN : str
     model_config = SettingsConfigDict(env_file=".env")
 
 
