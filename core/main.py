@@ -13,6 +13,15 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 from redis import asyncio as aioredis
 
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn=settings.SENTRY_DSN,
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
+
 tags_metadata = [
     {
         "name": "expenses",
@@ -106,3 +115,7 @@ async def fetch_current_weather(latitude: float = 40.7128, longitude: float = -7
 @app.get("/is_ready", status_code=200)
 async def readiness():
     return JSONResponse(content="ok")
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
